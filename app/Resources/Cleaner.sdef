@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+<dictionary title="Cleaner Terminology" xmlns:xi="http://www.w3.org/2003/XInclude">
+    <xi:include href="file:///System/Library/ScriptingDefinitions/CocoaStandard.sdef" xpointer="xpointer(/dictionary/suite)"/>
+
+    <suite name="Cleaner Suite" code="CLNR" description="Find and remove build folders, dependencies and caches.">
+        <command name="scan" code="CLNRscan" description="Scan folders (or the saved locations) for folders that can be cleaned.">
+            <cocoa class="CleanerScanCommand"/>
+            <direct-parameter optional="yes" description="Folders to scan. Leave out to scan the saved locations.">
+                <type type="file" list="yes"/>
+                <type type="text" list="yes"/>
+            </direct-parameter>
+            <parameter name="remembering" code="Rmbr" type="boolean" optional="yes"
+                       description="Also add the folders to the saved locations.">
+                <cocoa key="remember"/>
+            </parameter>
+        </command>
+
+        <command name="clean stale projects" code="CLNRstal"
+                 description="Scan, then clean folders of projects untouched for some days. Asks for confirmation unless that is turned off in Settings.">
+            <cocoa class="CleanerCleanStaleCommand"/>
+            <parameter name="older than" code="Days" type="integer" optional="yes"
+                       description="Days since the project last changed (default 30).">
+                <cocoa key="days"/>
+            </parameter>
+            <parameter name="in folders" code="Fldr" optional="yes" description="Folders to scan (default: the saved locations).">
+                <type type="file" list="yes"/>
+                <type type="text" list="yes"/>
+                <cocoa key="folders"/>
+            </parameter>
+        </command>
+
+        <command name="undo last cleanup" code="CLNRundo" description="Put the folders of the last Trash cleanup back.">
+            <cocoa class="CleanerUndoCommand"/>
+        </command>
+    </suite>
+</dictionary>

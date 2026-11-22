@@ -1,0 +1,32 @@
+[package]
+name = "cleaner"
+version = "0.2.0"
+edition = "2024"
+description = "Find and delete build artifacts, dependency folders and caches (node_modules, target, Flutter build, Gradle, Pods, ...)"
+
+[lib]
+name = "cleaner"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cleaner"
+path = "src/main.rs"
+
+# JSON back-end used by the macOS app (app/). Speaks newline-delimited JSON.
+[[bin]]
+name = "cleaner-engine"
+path = "src/bin/cleaner-engine.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+console = "0.15"
+dialoguer = "0.11"
+rayon = "1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+trash = "5.3.0"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

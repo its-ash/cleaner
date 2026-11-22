@@ -1,0 +1,8 @@
+target/
+build/
+bin/
+app/.build/
+.build/
+.swiftpm/
+.DS_Store
+.task-x/
