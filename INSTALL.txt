@@ -1,0 +1,29 @@
+Install Cleaner
+===============
+
+1. Drag Cleaner.app to the Applications folder.
+2. Open Cleaner from Applications.
+
+
+If macOS says "Cleaner is damaged" or "Cleaner cannot be opened"
+----------------------------------------------------------------
+
+Cleaner is not from the App Store, so Gatekeeper can block it.
+Open Terminal, paste this command, and press Return:
+
+    xattr -cr /Applications/Cleaner.app
+
+Then open Cleaner again.
+
+
+Homebrew
+--------
+
+You can also install Cleaner with Homebrew. The cask runs the command above for you:
+
+    brew tap its-ash/tap
+    brew trust its-ash/tap
+    brew install --cask cleaner
+
+Website: https://cleaner.itsash.in
+Source:  https://github.com/its-ash/cleaner

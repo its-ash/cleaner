@@ -9,13 +9,12 @@ With `--global` it also clears machine-wide caches: Xcode DerivedData, iOS Devic
 ## Mac app
 
 ```sh
-make app        # builds build/Cleaner.app (Rust engine embedded, ad-hoc signed)
-make open-app   # build and launch it
-make dev-app    # run from SwiftPM without bundling (debug)
-make test-all   # Rust + Swift tests
+make run       # run from SwiftPM without bundling (debug)
+make install   # build Cleaner.app, copy it to /Applications, open it
+make deploy    # release: zip with INSTALL.txt, GitHub release, Homebrew tap
 ```
 
-Requires macOS 14+, a Rust toolchain and the Xcode command line tools. Copy `build/Cleaner.app` to `/Applications` to keep it.
+Requires macOS 14+, a Rust toolchain and the Xcode command line tools. Bump `version` in `Cargo.toml` before `make deploy`.
 
 What it does:
 

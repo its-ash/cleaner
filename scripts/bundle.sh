@@ -2,11 +2,11 @@
 # Build Cleaner.app: the SwiftUI front end plus the Rust `cleaner-engine` helper.
 #
 #   scripts/bundle.sh            -> build/Cleaner.app
-#   OUT=/Applications scripts/bundle.sh
+#   also builds build/Cleaner-<version>-macos.zip with Cleaner.app and INSTALL.txt
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT="${OUT:-$ROOT/build}"
+OUT="$ROOT/build"
 APP="$OUT/Cleaner.app"
 VERSION="$(sed -n 's/^version *= *"\(.*\)"/\1/p' "$ROOT/Cargo.toml" | head -1)"
 
@@ -40,6 +40,15 @@ rm -rf "$(dirname "$ICONSET")"
 echo "==> Signing (ad hoc)"
 codesign --force --sign - "$APP/Contents/MacOS/cleaner-engine"
 codesign --force --sign - "$APP"
+
+echo "==> Packaging"
+DIST="$ROOT/build/dist"
+ZIP="$ROOT/build/Cleaner-$VERSION-macos.zip"
+rm -rf "$DIST" "$ZIP"
+mkdir -p "$DIST"
+ditto "$APP" "$DIST/Cleaner.app"
+cp "$ROOT/INSTALL.txt" "$DIST/INSTALL.txt"
+ditto -c -k "$DIST" "$ZIP"
 
 # Register the Services menu item and URL scheme with Launch Services.
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP" 2>/dev/null || true

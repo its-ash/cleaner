@@ -1,66 +1,34 @@
-# Run `cleaner` on the Desktop (or any folder: make DIR=~/Projects).
-#
-#   make            list everything under ~/Desktop, ask, then delete
-#   make preview    list only, delete nothing
-#   make pick       choose folders from a checklist
-#   make deep       also --aggressive folders and --global caches
-#   make yes        delete without asking (careful)
-#
-# Mac app (SwiftUI front end + Rust engine):
-#   make app        build build/Cleaner.app
-#   make open-app   build it and open it
-#   make dev-app    run the app straight from SwiftPM (debug)
-#   make test-all   Rust and Swift tests
-#
-# Extra flags: make ARGS="--skip python -x ~/Desktop/active-app"
+APP_NAME := Cleaner
+CASK := cleaner
+EXEC := Cleaner
+VERSION := $(shell sed -n 's/^version *= *"\(.*\)"/\1/p' Cargo.toml | head -1)
+APP := build/$(APP_NAME).app
+ZIP := build/$(APP_NAME)-$(VERSION)-macos.zip
+TAP := ../homebrew-tap
+LLM_URL ?= http://127.0.0.1:9694/v1/chat/completions
+LLM_MODEL ?= local
 
-DIR  ?= $(HOME)/Desktop
-ARGS ?=
+.PHONY: run install deploy
 
-# The binary is copied out of target/ so cleaning this project's own
-# target/ folder doesn't remove the tool you are running.
-BIN := bin/cleaner
-SRC := Cargo.toml $(wildcard src/*.rs)
-
-.DEFAULT_GOAL := run
-.PHONY: run preview pick deep yes install test app open-app dev-app test-all
-
-run: $(BIN)
-	@$(BIN) "$(DIR)" $(ARGS)
-
-preview: $(BIN)
-	@$(BIN) "$(DIR)" --dry-run $(ARGS)
-
-pick: $(BIN)
-	@$(BIN) "$(DIR)" --interactive $(ARGS)
-
-deep: $(BIN)
-	@$(BIN) "$(DIR)" --aggressive --global $(ARGS)
-
-yes: $(BIN)
-	@$(BIN) "$(DIR)" --yes $(ARGS)
-
-$(BIN): $(SRC)
-	cargo build --release
-	@mkdir -p bin
-	cp target/release/cleaner $(BIN)
-
-install:
-	cargo install --path .
-
-test:
-	cargo test
-
-app:
-	@scripts/bundle.sh
-
-open-app: app
-	open build/Cleaner.app
-
-dev-app:
+run:
+	@pkill -x $(EXEC) || true
 	cargo build --bin cleaner-engine
 	cd app && swift run Cleaner
 
-test-all:
-	cargo test
-	cd app && swift test
+install:
+	scripts/bundle.sh
+	@pkill -x $(EXEC) || true
+	rm -rf /Applications/$(APP_NAME).app
+	ditto $(APP) /Applications/$(APP_NAME).app
+	open /Applications/$(APP_NAME).app
+
+deploy:
+	@! git ls-remote --exit-code --tags origin "refs/tags/v$(VERSION)" >/dev/null 2>&1 || { echo "v$(VERSION) exists. Bump the version."; exit 1; }
+	scripts/bundle.sh
+	git checkout main
+	git add -A
+	@MSG=$$(git diff --cached | python3 -c 'import json,sys,urllib.request; diff=sys.stdin.read()[:12000]; req=urllib.request.Request("$(LLM_URL)", data=json.dumps({"model":"$(LLM_MODEL)","messages":[{"role":"system","content":"Generate one concise conventional commit message for the git diff. Output ONLY the commit message, no quotes, no markdown, no explanation."},{"role":"user","content":diff}],"temperature":0.2}).encode(), headers={"Content-Type":"application/json"}); print(json.loads(urllib.request.urlopen(req, timeout=60).read())["choices"][0]["message"]["content"].strip())' 2>/dev/null); \
+	git commit -m "$${MSG:-chore: release v$(VERSION)}" || true
+	git push origin main
+	gh release create v$(VERSION) $(ZIP) --title "$(APP_NAME) $(VERSION)" --generate-notes
+	cd $(TAP) && git pull -q && scripts/release.sh $(CASK) $(VERSION) && git add -A && git commit -m "$(CASK) $(VERSION)" && git push origin main
